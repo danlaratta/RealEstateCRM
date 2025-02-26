@@ -13,6 +13,7 @@ class Lead(Base):
     __tablename__ = 'leads'
 
     # define table attributes/columns
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     status: Mapped[str] = mapped_column(String(100), nullable=False, default= 'New')
     interest_level: Mapped[str] = mapped_column(String(100), nullable=False)
     date_saved: Mapped[datetime] = mapped_column(default=datetime.now())

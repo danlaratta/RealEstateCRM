@@ -20,7 +20,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     phone: Mapped[str] = mapped_column(String(10), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    password: Mapped[str] = mapped_column(String(25), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Relationships
     agents: Mapped[list['Agent']] = relationship(lazy='selectin') # one to many with Agent

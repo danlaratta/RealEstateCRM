@@ -20,9 +20,7 @@ class Listing(Base):
     baths: Mapped[int] = mapped_column(Integer, nullable=False)
     square_ft: Mapped[int] = mapped_column(Integer, nullable=False)
     days_on_market: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[str] = mapped_column(String(100), nullable=False, default= 'New')
-    interest_level: Mapped[str] = mapped_column(String(100), nullable=False)
-    date_saved: Mapped[datetime] = mapped_column(default=datetime.now())
+    agent_id: Mapped[int] = mapped_column(Integer, ForeignKey('agents.id', ondelete='CASCADE'), nullable=False) # FK links to agents table
 
     # Relationships
     agent: Mapped['Agent'] = relationship(back_populates='listings')
