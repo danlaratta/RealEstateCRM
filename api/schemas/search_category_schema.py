@@ -1,19 +1,19 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class LeadBase(BaseModel):
+class SearchCategoryBase(BaseModel):
     name: str
 
 
-class LeadCreate(LeadBase):
+class SearchCategoryCreate(SearchCategoryBase):
     pass
 
 
-class LeadUpdate(BaseModel):
+class SearchCategoryUpdate(BaseModel):
     name: Optional[str] = None
 
 
-class LeadResponse(LeadBase):
+class SearchCategoryResponse(SearchCategoryBase):
     id: int
     user_id: int
 

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class LeadBase(BaseModel):
+class UserBase(BaseModel):
     first_name: str
     last_name: str
     phone: str
@@ -9,11 +9,11 @@ class LeadBase(BaseModel):
     password: str
 
 
-class LeadCreate(LeadBase):
+class UserCreate(UserBase):
     pass
 
 
-class LeadUpdate(BaseModel):
+class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
@@ -21,7 +21,7 @@ class LeadUpdate(BaseModel):
     password: Optional[str] = None
 
 
-class LeadResponse(LeadBase):
+class UserResponse(UserBase):
     id: int
 
     class Config:
