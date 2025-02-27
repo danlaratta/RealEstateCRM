@@ -1,0 +1,117 @@
+from fastapi import HTTPException, status
+from sqlalchemy import update
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from passlib.context import CryptContext
+from api.schemas import UserCreate, UserUpdate
+from ..models import User
+from typing import Optional
+
+
+# Initialize bcrypt password hashing
+bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+
+# Create User
+async def create_user(db: AsyncSession, user: UserCreate) -> User:
+    # make sure password is hashed
+    if not bcrypt_context.identify(user.password):
+        hashed_pwd = bcrypt_context.hash(user.password)
+    else:
+        hashed_pwd = user.password
+
+    # create user
+    new_user: User = User(
+        first_name = user.first_name,
+        last_name = user.last_name,
+        phone = user.phone,
+        email = user.email,
+        password = hashed_pwd
+    )
+
+    try:
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+    except SQLAlchemyError as e:
+        await db.rollback() # rollback db session prior to issue
+        raise database_exception(e)
+
+    return new_user
+
+
+# Get User by ID
+async def get_user(db: AsyncSession, user_id: int) -> User:
+    user: Optional[User] = await db.get(User, user_id) # function may return none so type is an Optional
+
+    if user is None:
+        raise user_not_found_exception()
+
+    return user
+
+
+# Get User by email/username
+async def get_user_by_email(db: AsyncSession, email: str) -> User:
+    try:
+        result = await db.execute(select(User).filter(User.email == email))
+        user: Optional[User] = result.scalar_one_or_none()
+
+    except SQLAlchemyError as e:
+        raise database_exception(e)
+
+    if user is None:
+        raise user_not_found_exception()
+
+    return user
+
+
+# Update User
+async def update_user(db: AsyncSession, user_update_id, user_update: UserUpdate) -> User:
+    # Get user to update
+    user: User = await get_user(db, user_update_id)
+
+    # Convert pydantic schema to dictionary  only updates the attributes provided in the request from FE (exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True)
+
+    try:
+        # Update user
+        await db.execute(update(User).where(User.id == user_update_id).values(**update_data))
+
+        # Save changes to database
+        await db.commit()
+        await db.refresh(user)
+    except SQLAlchemyError as e:
+        await db.rollback() # rollback db session prior to issue
+        raise database_exception(e)
+
+    return user
+
+
+# Delete User
+async def delete_user(db: AsyncSession, user_id: int) -> User:
+    # Get the user you want to delete
+    user: User = await get_user(db, user_id)
+
+    try:
+        # Delete the user
+        await db.delete(user)
+        await db.commit()
+    except SQLAlchemyError as e:
+        await db.rollback()  # rollback db session prior to issue
+        raise database_exception(e)
+
+    return user
+
+
+# Custom Exceptions
+def database_exception(error)-> HTTPException:
+    return HTTPException (status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Database Error: {error}')
+
+
+def user_not_found_exception() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No user found, register for an account and log in.",
+        headers={"WWW-Authenticate": "Bearer"},  # Follows authentication standards
+    )
