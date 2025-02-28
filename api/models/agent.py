@@ -5,7 +5,6 @@ from api.models import Base
 
 # Avoid circule import
 if TYPE_CHECKING:
-    from .user import User
     from .listing import Listing
 
 class Agent(Base):

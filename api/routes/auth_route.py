@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Optional
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -32,12 +33,49 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 # Set up OAuth2 for receiving JWT Tokens
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/login')
 
+# TODO: Put this in a function
 # Custom Exception
 credential_exception = HTTPException(
                             status_code= status.HTTP_401_UNAUTHORIZED,
                             detail='Invalid credentials',
                             headers={'WWW-Authenticate': 'Bearer'},  # Follows authentication standards
                         )
+
+# async def is_new_user(email: str, db: AsyncSession = Depends(get_db)) -> bool:
+#     # Get user by email
+#     user: Optional[User] = await get_user_by_email(db, email)
+#
+#     # If a user exists with that email return false, otherwise return true
+#     if user:
+#         return False
+#     return True
+
+
+# Register a user
+@router.post('/register', response_model=UserResponse)
+async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
+    # If user doesn't exist hash password and create user
+    user.password = bcrypt_context.hash(user.password)
+
+    # Create and return the user
+    new_user =  await create_user(db, user)
+    return new_user
+
+
+@router.post('/login', response_model=Token)
+async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> dict[str: str]:
+    # get authenticated user
+    user: User = await authenticate_user(form_data.username, form_data.password, db)
+
+    if not user:
+        raise credential_exception
+
+    access_token_exp: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(user.email, user.id, access_token_exp)
+
+    return {'access_token': access_token, 'token_type': 'bearer', 'email': user.email}
+
+
 
 # Hash password
 def get_hashed_password(password: str) -> str:
@@ -91,33 +129,3 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     if user is None:
         raise credential_exception
     return user
-
-
-# Register a user
-@router.post('/', response_model=UserResponse)
-async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
-    # Check if user exists
-    existing_user = await get_user_by_email(db, user.email)
-
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User already exists')
-
-    # If user doesn't exist hash password and create user
-    user.password = bcrypt_context.hash(user.password)
-    return await create_user(db, user)
-
-
-@router.post('/login', response_model=Token)
-async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> dict[str: str]:
-    # get authenticated user
-    user: User = await authenticate_user(form_data.username, form_data.password, db)
-
-    if not user:
-        raise credential_exception
-
-    access_token_exp: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(user.email, user.id, access_token_exp)
-
-    return {'access_token': access_token, 'token_type': 'bearer'}
-
-

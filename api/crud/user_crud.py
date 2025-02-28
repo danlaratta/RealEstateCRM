@@ -15,11 +15,10 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 # Create User
 async def create_user(db: AsyncSession, user: UserCreate) -> User:
-    # make sure password is hashed
-    if not bcrypt_context.identify(user.password):
-        hashed_pwd = bcrypt_context.hash(user.password)
-    else:
-        hashed_pwd = user.password
+    # Check if user already exists, raise exception if they do
+    user_exists: Optional[User] = await get_user_by_email(db, user.email)
+    if user_exists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='An account with this email may already exist.')
 
     # create user
     new_user: User = User(
@@ -27,7 +26,7 @@ async def create_user(db: AsyncSession, user: UserCreate) -> User:
         last_name = user.last_name,
         phone = user.phone,
         email = user.email,
-        password = hashed_pwd
+        password = user.password
     )
 
     try:
@@ -60,10 +59,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User:
     except SQLAlchemyError as e:
         raise database_exception(e)
 
-    if user is None:
-        raise user_not_found_exception()
-
-    return user
+    return user # will return User or None depending on if the user exists or not
 
 
 # Update User

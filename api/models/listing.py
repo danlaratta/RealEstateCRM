@@ -1,7 +1,6 @@
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api.models import Base
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 # Avoid circule import
