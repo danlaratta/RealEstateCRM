@@ -1,13 +1,17 @@
 from datetime import timedelta
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.database import get_db
 from api.models import User
 from api.crud.user_crud import create_user
 from api.schemas.user_schema import UserResponse, UserCreate, Token
-from ..config import (ACCESS_TOKEN_EXPIRE_MINUTES, router, bcrypt_context)
+from ..config import (ACCESS_TOKEN_EXPIRE_MINUTES, bcrypt_context)
 from ..services import ( authenticate_user, create_access_token, credential_exception)
+
+
+# Define auth route
+router = APIRouter(prefix='/auth')
 
 # Register a user
 @router.post('/register', response_model=UserResponse)
