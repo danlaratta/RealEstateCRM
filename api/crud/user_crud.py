@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy import update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from passlib.context import CryptContext
@@ -15,27 +15,24 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 # Create User
 async def create_user(db: AsyncSession, user: UserCreate) -> User:
-    # Check if user already exists, raise exception if they do
-    user_exists: Optional[User] = await get_user_by_email(db, user.email)
-    if user_exists:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='An account with this email may already exist.')
-
-    # create user
-    new_user: User = User(
-        first_name = user.first_name,
-        last_name = user.last_name,
-        phone = user.phone,
-        email = user.email,
-        password = user.password
-    )
-
     try:
+        # Check if user already exists, raise exception if they do
+        user_exists: Optional[User] = await get_user_by_email(db, user.email)
+        if user_exists:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='An account with this email may already exist.')
+
+        # create user
+        new_user: User = User(**user.model_dump())
+
+
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
-    except SQLAlchemyError as e:
-        await db.rollback() # rollback db session prior to issue
-        raise database_exception(e)
+    except IntegrityError:  # Handle unique constraint violations
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
+    except SQLAlchemyError :
+        await db.rollback()  # Ensure rollback on failure
+        raise database_exception()  # Custom database error handling
 
     return new_user
 
@@ -56,8 +53,8 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User:
         result = await db.execute(select(User).filter(User.email == email))
         user: Optional[User] = result.scalar_one_or_none()
 
-    except SQLAlchemyError as e:
-        raise database_exception(e)
+    except SQLAlchemyError :
+        raise database_exception()
 
     return user # will return User or None depending on if the user exists or not
 
@@ -77,9 +74,9 @@ async def update_user(db: AsyncSession, user_update_id, user_update: UserUpdate)
         # Save changes to database
         await db.commit()
         await db.refresh(user)
-    except SQLAlchemyError as e:
+    except SQLAlchemyError :
         await db.rollback() # rollback db session prior to issue
-        raise database_exception(e)
+        raise database_exception()
 
     return user
 
@@ -93,16 +90,16 @@ async def delete_user(db: AsyncSession, user_id: int) -> User:
         # Delete the user
         await db.delete(user)
         await db.commit()
-    except SQLAlchemyError as e:
+    except SQLAlchemyError :
         await db.rollback()  # rollback db session prior to issue
-        raise database_exception(e)
+        raise database_exception()
 
     return user
 
 
 # Custom Exceptions
-def database_exception(error)-> HTTPException:
-    return HTTPException (status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Database Error: {error}')
+def database_exception()-> HTTPException:
+    return HTTPException (status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Database Error Occurred')
 
 
 def user_not_found_exception() -> HTTPException:
