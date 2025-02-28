@@ -9,4 +9,8 @@ router = APIRouter(prefix='/user')
 
 @router.get('/{user_id}', response_model=UserResponse)
 async def get_current_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    pass
+    user = await get_user(db, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User is not found something wrong')
+    return user

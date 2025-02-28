@@ -37,14 +37,9 @@ async def create_user(db: AsyncSession, user: UserCreate) -> User:
     return new_user
 
 
-# Get User by ID
-async def get_user(db: AsyncSession, user_id: int) -> User:
-    user: Optional[User] = await db.get(User, user_id) # function may return none so type is an Optional
-
-    if user is None:
-        raise user_not_found_exception()
-
-    return user
+async def get_user(db: AsyncSession, user_id: int):
+    # find the user by ID
+    return await db.get(User, user_id)
 
 
 # Get User by email/username
