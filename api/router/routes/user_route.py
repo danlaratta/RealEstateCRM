@@ -21,3 +21,9 @@ async def update_current_user(user_id: int, user_update: UserUpdate, db: AsyncSe
     user: User = await update_user(db, user_id, user_update)
     return UserResponse.model_validate(user)
 
+
+@router.delete('/{user_id}', response_model=UserResponse)
+async def delete_current_user(user_id: int, db: AsyncSession = Depends(get_db)) -> UserResponse:
+    # delete and return deleted user
+    user: User = await delete_user(db, user_id)
+    return UserResponse.model_validate(user)
