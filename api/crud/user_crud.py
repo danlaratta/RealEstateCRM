@@ -59,25 +59,32 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User:
 
 
 # Update User
-async def update_user(db: AsyncSession, user_update_id, user_update: UserUpdate) -> User:
-    # Get user to update
-    user: User = await get_user(db, user_update_id)
+async def update_user(db: AsyncSession, user_id: int, user_update: UserUpdate) -> User:
+    user: Optional[User] = await get_user(db, user_id)
 
-    # Convert pydantic schema to dictionary  only updates the attributes provided in the request from FE (exclude_unset=True)
-    update_data = user_update.model_dump(exclude_unset=True)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Convert the update model into a dictionary, excluding fields not being updated
+    update_data: dict[str, str] = user_update.model_dump(exclude_unset=True)
 
     try:
-        # Update user
-        await db.execute(update(User).where(User.id == user_update_id).values(**update_data))
-
-        # Save changes to database
+        # Update the user
+        await db.execute(update(User).where(User.id == user_id).values(**update_data))
         await db.commit()
-        await db.refresh(user)
-    except SQLAlchemyError :
-        await db.rollback() # rollback db session prior to issue
-        raise database_exception()
 
-    return user
+        # Fetch and return the updated user
+        result = await db.execute(select(User).where(User.id == user_id))
+        updated_user: Optional[User] = result.scalar_one_or_none()
+
+        if updated_user is None:
+            raise HTTPException(status_code=500, detail="Failed to retrieve updated user")
+
+        return updated_user
+
+    except SQLAlchemyError:
+        await db.rollback()
+        raise database_exception()
 
 
 # Delete User
