@@ -6,49 +6,51 @@ from typing import Optional
 from api.schemas import AgentCreate, AgentUpdate
 from ..crud.user_crud import get_user
 from ..models import Agent, User
-
+from ..router.exceptions import database_exception
 
 # Create Agent
 async def create_agent(db: AsyncSession, user_id: int, agent: AgentCreate) -> Agent:
     # Get User who's creating/saving Agent
     user: User = await get_user(db, user_id)
 
-    try:
-        # Create Agent linking to User
-        new_agent: Agent = Agent(**agent.model_dump(), user_id = user.id)
+    # Create Agent linking to User
+    new_agent: Agent = Agent(**agent.model_dump(), user_id=user.id)
 
+    try:
         # Save to database
         db.add(new_agent)
         await db.commit()
         await db.refresh(new_agent)
         return new_agent
-    except IntegrityError:  # Handle unique constraint violations
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-    except SQLAlchemyError:
-        await db.rollback()  # Ensure rollback on failure
-        raise database_exception()  # Custom database error handling
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Agent already exists")
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
 
 # Get a single agent by ID
 async def get_agent(db: AsyncSession, user_id: int, agent_id: int) -> Agent:
-        # Query for the user's agent
+        # Query for specific agent
         result = await db.execute(select(Agent).filter(Agent.id == agent_id, Agent.user_id == user_id))
         agent: Optional[Agent] = result.scalar_one_or_none()
 
         if agent is None:
             raise HTTPException(status_code=404, detail="Agent not found")
 
-        if agent.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Access denied")
-
         return agent
 
 
 # Get all agents
 async def get_all_agents(db: AsyncSession, user_id: int) -> list[Agent]:
+    # Query for all agents
     result = await db.execute(select(Agent).filter(Agent.user_id == user_id))
     agents: Optional[list[Agent]] = list[Agent](result.scalars().all())
-    return agents # returns empty list if no agents found
+
+    if agents is None:
+        raise HTTPException(status_code=404, detail="No Agents found")
+
+    return agents # returns empty list if no agents are found
 
 
 # Update Agent
@@ -68,10 +70,9 @@ async def update_agent(db: AsyncSession, user_id: int, agent_id: int, agent_upda
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Duplicate entry detected")
-
-    except SQLAlchemyError:
-        await db.rollback()  # rollback db session prior to issue
-        raise database_exception()
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
 
 # Delete Agent
@@ -84,11 +85,8 @@ async def delete_agent(db: AsyncSession, user_id: int, agent_id: int) -> Respons
         await db.delete(agent)
         await db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)  # Response signifies deletion
-    except SQLAlchemyError :
-        await db.rollback()  # rollback db session prior to issue
-        raise database_exception()
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
 
-# Custom Exception
-def database_exception()-> HTTPException:
-    return HTTPException (status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Database Error Occurred')
