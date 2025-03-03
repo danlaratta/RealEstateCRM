@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
+from api.schemas.search_category_schema import CategoryResponse
+
 
 class SearchBase(BaseModel):
     city: str
@@ -13,7 +15,7 @@ class SearchBase(BaseModel):
 
 
 class SearchCreate(SearchBase):
-    pass
+    category_id: int  # Ensure category is required when creating a search
 
 
 class SearchUpdate(BaseModel):
@@ -30,7 +32,10 @@ class SearchUpdate(BaseModel):
 class SearchResponse(SearchBase):
     id: int
     user_id: int
-    category_id: int
+    category: 'CategoryResponse' # Include the category details (uses string reference to avoid circular import
 
     class Config:
         from_attributes = True
+
+# Explicitly rebuild the model after all dependencies are resolved
+SearchResponse.model_rebuild()
