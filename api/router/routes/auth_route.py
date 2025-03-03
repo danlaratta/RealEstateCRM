@@ -14,7 +14,7 @@ from ..services import ( authenticate_user, create_access_token, credential_exce
 router = APIRouter(prefix='/auth')
 
 # Register a user
-@router.post('/register', response_model=UserResponse)
+@router.post('/register', response_model=UserResponse, status_code=201)
 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
     try:
         # If user doesn't exist hash password and create user
@@ -31,7 +31,7 @@ async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)) ->
     return new_user
 
 
-@router.post('/login', response_model=Token)
+@router.post('/login', response_model=Token, status_code=200)
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> dict[str: str]:
     try:
         # get authenticated user
