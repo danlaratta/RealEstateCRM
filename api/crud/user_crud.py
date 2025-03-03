@@ -1,11 +1,11 @@
 from fastapi import HTTPException, status, Response
-from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import Optional
 from api.schemas import UserCreate, UserUpdate
 from ..models import User
+from api.router.exceptions import database_exception, user_not_found_exception
 
 
 # Create User
@@ -25,9 +25,9 @@ async def create_user(db: AsyncSession, user: UserCreate) -> User:
         await db.refresh(new_user)
     except IntegrityError:  # Handle unique constraint violations
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-    except SQLAlchemyError :
-        await db.rollback()  # Ensure rollback on failure
-        raise database_exception()  # Custom database error handling
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
     return new_user
 
@@ -48,8 +48,9 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User:
         result = await db.execute(select(User).filter(User.email == email))
         user: Optional[User] = result.scalar_one_or_none()
 
-    except SQLAlchemyError :
-        raise database_exception()
+
+    except SQLAlchemyError as e:
+        raise database_exception(e)
 
     return user # will return User or None depending on if the user exists or not
 
@@ -80,9 +81,9 @@ async def update_user(db: AsyncSession, user_id: int, user_update: UserUpdate) -
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Duplicate entry detected")
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         await db.rollback()
-        raise database_exception()
+        raise database_exception(e)
 
 
 # Delete User
@@ -95,19 +96,7 @@ async def delete_user(db: AsyncSession, user_id: int) -> Response:
         await db.delete(user)
         await db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)  # Response signifies deletion
-    except SQLAlchemyError :
-        await db.rollback()  # rollback db session prior to issue
-        raise database_exception()
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
-
-# Custom Exceptions
-def database_exception()-> HTTPException:
-    return HTTPException (status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Database Error Occurred')
-
-
-def user_not_found_exception() -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="No user found, register for an account and log in.",
-        headers={"WWW-Authenticate": "Bearer"},  # Follows authentication standards
-    )

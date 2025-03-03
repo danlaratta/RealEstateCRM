@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response
 from api.crud.agent_crud import create_agent, get_agent, get_all_agents, update_agent, delete_agent
-from api.schemas.agent_schema import AgentResponse, AgentUpdate, AgentCreate
 from sqlalchemy.ext.asyncio import AsyncSession
+from api.schemas.agent_schema import AgentResponse, AgentUpdate, AgentCreate
 from api.database.database import get_db
 from api.models.user import User
 from api.models.agent import Agent

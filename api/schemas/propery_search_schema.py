@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class PropertySearchBase(BaseModel):
+class SearchBase(BaseModel):
     city: str
     state: str
     price_min: int
@@ -12,11 +12,11 @@ class PropertySearchBase(BaseModel):
     square_ft_max: int
 
 
-class PropertySearchCreate(PropertySearchBase):
+class SearchCreate(SearchBase):
     pass
 
 
-class PropertySearchUpdate(BaseModel):
+class SearchUpdate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     price_min: Optional[int] = None
@@ -27,7 +27,7 @@ class PropertySearchUpdate(BaseModel):
     square_ft_max: Optional[int] = None
 
 
-class PropertySearchResponse(PropertySearchBase):
+class SearchResponse(SearchBase):
     id: int
     user_id: int
     category_id: int
