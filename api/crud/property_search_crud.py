@@ -3,12 +3,10 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import Optional
-
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
-
-from api.models.user import User
+from starlette.status import HTTP_404_NOT_FOUND
+from api.models import User, PropertySearch, SearchCategory
 from api.crud.user_crud import get_user
-from api.models.property_search import PropertySearch
+from api.crud.search_category_crud import get_category
 from api.schemas.propery_search_schema import SearchCreate, SearchUpdate
 from api.router.exceptions.exceptions import database_exception
 
@@ -17,10 +15,14 @@ async def create_search(db: AsyncSession, user_id: int, search_create: SearchCre
     # Get User
     user: User = await get_user(db, user_id)
 
+    # Get Search Category
+    category: SearchCategory = await get_category(db, user_id, search_create.category_id)
+
     # Create Search
-    new_search: PropertySearch = PropertySearch(**search_create.model_dump(),  user_id = user.id)
+    new_search: PropertySearch = PropertySearch(**search_create.model_dump(),  user_id = user.id, category= category)
 
     try:
+        db.add(new_search)
         await db.commit()
         await db.refresh(new_search)
         return new_search
@@ -44,9 +46,9 @@ async def get_search(db: AsyncSession, user_id: int, search_id) -> PropertySearc
 
 
 # Get All Searches
-async def get_all_search(db: AsyncSession, user_id: int) -> list[PropertySearch]:
+async def get_all_searches(db: AsyncSession, user_id: int) -> list[PropertySearch]:
     # Query for all Searches
-    result = await db.execute(select(PropertySearch).filter(PropertySearch.id == user_id))
+    result = await db.execute(select(PropertySearch).filter(PropertySearch.user_id == user_id))
     searches: list[PropertySearch] = list[PropertySearch](result.scalars().all())
 
     if searches is None:
@@ -61,7 +63,17 @@ async def update_search(db: AsyncSession, user_id: int, search_id: int, search_u
     search: PropertySearch = await get_search(db, user_id, search_id)
 
     try:
-        for key, value in search_update.model_dump(exclude_unset=True).items():
+        # Get the udpated data
+        update_data = search_update.model_dump(exclude_unset=True)
+
+        # Handle updating the PropertySearch and SearchCategory relationship (has to be done separately from attributes)
+        if "category_id" in update_data:
+            category: SearchCategory = await get_category(db, user_id, update_data["category_id"])
+            search.category = category  # Set the relationship
+            del update_data["category_id"]  # Remove category_id from update_data so it's not updated again when updating the attributes
+
+        # Update remaining fields
+        for key, value in update_data.items():
             setattr(search, key, value)
 
         await db.commit()
