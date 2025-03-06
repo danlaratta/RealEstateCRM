@@ -41,7 +41,7 @@ async def authenticate_user(email: str, password: str, db: AsyncSession = Depend
 # Create new JWT Token
 def create_access_token(email: str, user_id: int, expires_delta: timedelta or None = None) -> str:
     to_encode = {'sub': email, 'id': user_id}
-    expires = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=30))
+    expires = datetime.now(UTC) + (expires_delta if expires_delta else timedelta(minutes=120))
     to_encode.update({
         'exp': expires,
         'iat': datetime.now(UTC)

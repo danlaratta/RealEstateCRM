@@ -1,14 +1,17 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class ListingBase(BaseModel):
+    zpid: int
     address: str
-    status_type: str = 'New'
-    home_type: str = 'House'
+    # status_type: StatusTypeProperty = Field(default=StatusTypeProperty.FORRENT, alias='listingStatus')
+    status_type: str = Field(default='test', alias='listingStatus')
+    home_type: str =  Field(default='test', alias='propertyType')
     price: int
-    bedrooms: int = Field(default=0, alias='beds')
-    bathrooms: int = Field(default=0, alias='baths')
-    square_ft: int = Field(default=0, alias='livingArea')
+    bedrooms:int
+    bathrooms: int
+    square_ft: Optional[int] = Field(default=0, alias='livingArea')
     days_on_market: int = Field(default=0, alias='daysOnZillow')
 
 
@@ -17,16 +20,17 @@ class ListingCreate(ListingBase):
 
 
 class ListingResponse(ListingBase):
-    id: Optional[int]
+    zpid:  int
     address: str
-    status_type: str = 'ForSale'
-    home_type: str = 'houses'
+    status_type: str = Field(default='test', alias='listingStatus')
+    home_type: str =  Field(default='test', alias='propertyType')
     price: int
-    bedrooms: int = Field(default=0, alias='beds')
-    bathrooms: int = Field(default=0, alias='baths')
-    square_ft: int = Field(default=0, alias='livingArea')
+    bedrooms: int
+    bathrooms: int
+    square_ft: Optional[int] = Field(default=0, alias='livingArea')
     days_on_market: int = Field(default=0, alias='daysOnZillow')
     # agent_id: int
 
     class Config:
         from_attributes = True
+        populate_by_name = True
