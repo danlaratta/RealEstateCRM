@@ -15,11 +15,13 @@ class Listing(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     address: Mapped[str] = mapped_column(String(255), nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
-    beds: Mapped[int] = mapped_column(Integer, nullable=False)
-    baths: Mapped[int] = mapped_column(Integer, nullable=False)
+    status_type: Mapped[str] = mapped_column(String(50), nullable=False, default='ForSale')
+    home_type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')
+    bedrooms: Mapped[int] = mapped_column(Integer, nullable=False)
+    bathrooms: Mapped[int] = mapped_column(Integer, nullable=False)
     square_ft: Mapped[int] = mapped_column(Integer, nullable=False)
     days_on_market: Mapped[int] = mapped_column(Integer, nullable=False)
-    agent_id: Mapped[int] = mapped_column(Integer, ForeignKey('agents.id', ondelete='CASCADE'), nullable=False) # FK links to agents table
+    # agent_id: Mapped[int] = mapped_column(Integer, ForeignKey('agents.id', ondelete='CASCADE'), nullable=False) # FK links to agents table
 
     # Relationships
-    agent: Mapped['Agent'] = relationship(back_populates='listings')
+#     agent: Mapped['Agent'] = relationship(back_populates='listings')

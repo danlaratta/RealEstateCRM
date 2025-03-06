@@ -15,6 +15,8 @@ class PropertySearch(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     city: Mapped[str] = mapped_column(String(50), nullable=False)
     state: Mapped[str] = mapped_column(String(50), nullable=False)
+    status_type: Mapped[str] = mapped_column(String(50), nullable=False, default='ForSale')
+    home_Type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')
     price_min: Mapped[int] = mapped_column(Integer, nullable=False)
     price_max: Mapped[int] = mapped_column(Integer, nullable=False)
     beds: Mapped[int] = mapped_column(Integer, nullable=False)
