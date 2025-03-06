@@ -1,21 +1,16 @@
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api.models import Base
-from typing import TYPE_CHECKING
-
-# Avoid circule import
-if TYPE_CHECKING:
-    from .agent import Agent
 
 class Listing(Base):
     # define table name
     __tablename__ = 'listings'
 
     # define table attributes/columns
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    zpid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     address: Mapped[str] = mapped_column(String(255), nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
-    status_type: Mapped[str] = mapped_column(String(50), nullable=False, default='ForSale')
+    status_type: Mapped[str] = mapped_column(String(50), nullable=False)
     home_type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')
     bedrooms: Mapped[int] = mapped_column(Integer, nullable=False)
     bathrooms: Mapped[int] = mapped_column(Integer, nullable=False)

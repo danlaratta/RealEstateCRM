@@ -12,7 +12,7 @@ if not SECRET_KEY:
 
 # JWT configurations
 ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 
 # Initialize bcrypt password hashing
