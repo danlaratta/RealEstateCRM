@@ -20,5 +20,5 @@ class Agent(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False) # FK links to users table
 
     # Relationships
-    listings: Mapped[list['Listing']] = relationship(back_populates='agent', lazy='selectin')
+    # listings: Mapped[list['Listing']] = relationship(back_populates='agent', lazy='selectin')
 

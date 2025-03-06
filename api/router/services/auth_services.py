@@ -1,5 +1,6 @@
 from jose import jwt
 from passlib.exc import InvalidTokenError
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, UTC
 from jose.exceptions import JWTError
 from api.database import get_db
@@ -25,8 +26,11 @@ def verify_password(password: str, hashed_pwd: str) -> bool:
 async def authenticate_user(email: str, password: str, db: AsyncSession = Depends(get_db)) -> User:
     try:
         user: User = await get_user_by_email(db, email)
-    except:
-        raise bad_request_exception()
+    except SQLAlchemyError as e:  # Catch database-related errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=bad_request_exception(e)
+        )
 
     if not user or not verify_password(password, user.password):
         raise credential_exception()
@@ -72,5 +76,5 @@ async def get_authenticated_user(token: str = Depends(oauth2_scheme), db: AsyncS
 def credential_exception() -> HTTPException:
     return HTTPException( status_code= status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials', headers={'WWW-Authenticate': 'Bearer'} )
 
-def bad_request_exception() -> HTTPException:
-    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Unable to register')
+def bad_request_exception(e) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Unable to Login: {e}')

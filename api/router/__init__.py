@@ -4,6 +4,7 @@ from api.router.routes.auth_route import router as auth_route
 from api.router.routes.agent_route import router as agent_route
 from api.router.routes.search_category_route import router as category_route
 from api.router.routes.property_search_route import router as search_route
+from api.router.routes.listing_route  import router as listing_route
 
 
 router = APIRouter()
@@ -12,3 +13,4 @@ router.include_router(auth_route)
 router.include_router(agent_route)
 router.include_router(category_route)
 router.include_router(search_route)
+router.include_router(listing_route)
