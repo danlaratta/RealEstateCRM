@@ -46,7 +46,8 @@ class ApiService:
         }
         return params
 
-    # Get house listings from api
+
+    # Get json from api
     async def get_json_listings(self) -> dict[str, list[dict[str, Any]]]:
         try:
             response = requests.get(self.BASE_URL, headers=self.headers, params=self.get_params())
@@ -55,35 +56,8 @@ class ApiService:
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=f'API request failed: {str(e)}')
 
-    # async def get_listings(self) -> list[Listing]:
-    #     json = await self.get_json_listings()
-    #     listings_data = json.get('props', [])  # Extract the list
-    #
-    #     # Define a mapping of API response keys to Listing model attributes (key: json property, value: Listing schema property)
-    #     field_mapping = {
-    #         'zpid': 'zpid',
-    #         'bathrooms': 'bathrooms',
-    #         'price': 'price',
-    #         'bedrooms': 'bedrooms',
-    #         'address': 'address',
-    #         'daysOnZillow': 'days_on_market',
-    #         'livingArea': 'square_ft',
-    #         'listingStatus': 'status_type',
-    #         'propertyType': 'home_type',
-    #     }
-    #
-    #     # Create ListingCreate instances from raw data
-    #     # listing_create_instances = [
-    #     #     ListingCreate(**{field_mapping[key]: listing[key] for key in field_mapping if key in listing})
-    #     #     for listing in listings_data
-    #     # ]
-    #
-    #     listing_create_instances = [ListingCreate.model_validate(listing) for listing in listings_data]
-    #
-    #     # Convert ListingCreate instances to Listing models
-    #     listings = [Listing(**listing.model_dump()) for listing in listing_create_instances]
-        # return listings
 
+    # Get listings
     async def get_listings(self) -> list[Listing]:
         json_data = await self.get_json_listings()
 
@@ -97,3 +71,14 @@ class ApiService:
         listings = [Listing(**listing.model_dump()) for listing in listing_create_instances]
 
         return listings
+
+
+    # Get listing by zpid
+    async def get_listing_by_zpid(self, zpid: int) -> Listing:
+        listings: list[Listing] = await self.get_listings()  # Get all listings
+
+        for listing in listings:
+            if listing.zpid == zpid:
+                return listing
+
+        raise HTTPException(status_code=404, detail="Listing not found")

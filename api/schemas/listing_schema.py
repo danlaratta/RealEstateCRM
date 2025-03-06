@@ -5,7 +5,6 @@ from typing import Optional
 class ListingBase(BaseModel):
     zpid: int
     address: str
-    # status_type: StatusTypeProperty = Field(default=StatusTypeProperty.FORRENT, alias='listingStatus')
     status_type: str = Field(default='test', alias='listingStatus')
     home_type: str =  Field(default='test', alias='propertyType')
     price: int
