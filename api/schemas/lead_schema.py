@@ -1,9 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from datetime import datetime, UTC
 
 class LeadBase(BaseModel):
-    status: str
-    interest_level: str
+    zpid: int
+    status: str = Field(default='New')
+    interest_level: str = Field(default='No Interest')
+    date_saved: datetime = Field(default=datetime.now(UTC))
 
 
 class LeadCreate(LeadBase):
@@ -11,14 +13,18 @@ class LeadCreate(LeadBase):
 
 
 class LeadUpdate(BaseModel):
-    status: Optional[str] = None
-    interest_level: Optional[str] = None
+    status: str = Field(default='New')
+    interest_level: str = Field(default='No Interest')
 
 
 class LeadResponse(LeadBase):
     id: int
     user_id: int
-    listing_id: int
+    zpid: int
+    date_saved: datetime = Field(default=datetime.now(UTC))
+    status: str = Field(default='New')
+    interest_level: str = Field(default='No Interest')
+
 
     class Config:
         from_attributes = True

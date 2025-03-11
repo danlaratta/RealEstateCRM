@@ -18,7 +18,7 @@ class Lead(Base):
     interest_level: Mapped[str] = mapped_column(String(100), nullable=False)
     date_saved: Mapped[datetime] = mapped_column(default=datetime.now(UTC))
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False) # FK links to users table
-    listing_id: Mapped[int] = mapped_column(Integer, ForeignKey('listings.zpid', ondelete='CASCADE'), nullable=False) # FK links to listing table
+    zpid: Mapped[int] = mapped_column(Integer, ForeignKey('listings.zpid', ondelete='CASCADE'), nullable=False) # FK links to listing table
 
     # Relationships
     listing: Mapped['Listing'] = relationship(lazy='selectin')

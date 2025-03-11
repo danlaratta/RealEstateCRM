@@ -5,8 +5,8 @@ from typing import Optional
 class ListingBase(BaseModel):
     zpid: int
     address: str
-    status_type: str = Field(default='test', alias='listingStatus')
-    home_type: str =  Field(default='test', alias='propertyType')
+    status_type: str = Field(default='ForSale', alias='listingStatus')
+    home_type: str =  Field(default='Houses', alias='propertyType')
     price: int
     bedrooms:int
     bathrooms: int
@@ -21,8 +21,8 @@ class ListingCreate(ListingBase):
 class ListingResponse(ListingBase):
     zpid:  int
     address: str
-    status_type: str = Field(default='test', alias='listingStatus')
-    home_type: str =  Field(default='test', alias='propertyType')
+    status_type: str = Field(default='ForSale', alias='listingStatus')
+    home_type: str = Field(default='Houses', alias='propertyType')
     price: int
     bedrooms: int
     bathrooms: int

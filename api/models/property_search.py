@@ -13,14 +13,17 @@ class PropertySearch(Base):
 
     # define table attributes/columns
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    city: Mapped[str] = mapped_column(String(50), nullable=False)
-    state: Mapped[str] = mapped_column(String(50), nullable=False)
+    # city: Mapped[str] = mapped_column(String(50), nullable=False)
+    # state: Mapped[str] = mapped_column(String(50), nullable=False)
+    location: Mapped[str] = mapped_column(String(255), nullable=False)
     status_type: Mapped[str] = mapped_column(String(50), nullable=False, default='ForSale')
-    home_Type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')
+    home_type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')
     price_min: Mapped[int] = mapped_column(Integer, nullable=False)
     price_max: Mapped[int] = mapped_column(Integer, nullable=False)
-    beds: Mapped[int] = mapped_column(Integer, nullable=False)
-    baths: Mapped[int] = mapped_column(Integer, nullable=False)
+    beds_min: Mapped[int] = mapped_column(Integer, nullable=False)
+    beds_max: Mapped[int] = mapped_column(Integer, nullable=False)
+    baths_min: Mapped[int] = mapped_column(Integer, nullable=False)
+    baths_max: Mapped[int] = mapped_column(Integer, nullable=False)
     square_ft_min: Mapped[int] = mapped_column(Integer, nullable=False)
     square_ft_max: Mapped[int] = mapped_column(Integer, nullable=False)
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey('search_categories.id', ondelete='CASCADE'), nullable=False) # FK links to search_categories table
