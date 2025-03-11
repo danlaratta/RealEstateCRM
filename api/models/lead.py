@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api.models import Base
 from datetime import datetime, UTC
@@ -16,9 +16,9 @@ class Lead(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     status: Mapped[str] = mapped_column(String(100), nullable=False, default= 'New')
     interest_level: Mapped[str] = mapped_column(String(100), nullable=False)
-    date_saved: Mapped[datetime] = mapped_column(default=datetime.now(UTC))
+    date_saved: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, default=datetime.now(UTC))
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False) # FK links to users table
-    listing_id: Mapped[int] = mapped_column(Integer, ForeignKey('listings.zpid', ondelete='CASCADE'), nullable=False) # FK links to listing table
+    zpid: Mapped[int] = mapped_column(Integer, ForeignKey('listings.zpid', ondelete='CASCADE'), nullable=False) # FK links to listing table
 
     # Relationships
     listing: Mapped['Listing'] = relationship(lazy='selectin')

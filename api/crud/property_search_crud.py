@@ -40,7 +40,7 @@ async def get_search(db: AsyncSession, user_id: int, search_id) -> PropertySearc
     search: Optional[PropertySearch] = result.scalar_one_or_none()
 
     if search is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail='Search Not Found')
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail='No saved search found')
 
     return search
 
