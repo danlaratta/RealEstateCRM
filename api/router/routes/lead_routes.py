@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.models import User, Lead
-from api.crud.lead_crud import create_lead_manual_search, create_lead_saved_search, get_all_leads
-from api.schemas.lead_schema import LeadResponse, LeadCreate
+from api.crud.lead_crud import create_lead_manual_search, create_lead_saved_search, get_all_leads, get_lead, update_lead, delete_lead
+from api.schemas.lead_schema import LeadResponse, LeadCreate, LeadUpdate
 from api.router.services.auth_services import get_authenticated_user
 from api.database.database import get_db
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix='/leads')
 
 # Create Lead from manual search
 @router.post('/custom-search', response_model=LeadResponse, status_code=200)
-async def get_lead_route(request_body: dict, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
+async def create_lead_manual(request_body: dict, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
     # extract parmas from request body
     try:
         zpid = request_body.get('zpid')
@@ -32,7 +32,7 @@ async def get_lead_route(request_body: dict, authenticated_user: User = Depends(
 
 
 @router.post('/saved-search', response_model=LeadResponse, status_code=200)
-async def get_lead_route(request_body: dict, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
+async def create_lead_saved(request_body: dict, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
     # extract parmas from request body
     try:
         zpid = request_body.get('zpid')
@@ -60,18 +60,21 @@ async def get_leads_route(authenticated_user: User = Depends(get_authenticated_u
 
 
 # Get a Lead
-@router.get('/{zpid}', response_model=LeadResponse, status_code=200)
-async def get_lead_route(authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
-    pass
+@router.get('/{lead_id}', response_model=LeadResponse, status_code=200)
+async def get_lead_route(lead_id: int, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
+    lead: Lead = await get_lead(db, authenticated_user.id, lead_id)
+    return LeadResponse.model_validate(lead)
 
 
 # Update Lead
-@router.put('/{zpid}', response_model=LeadResponse, status_code=200)
-async def update_lead_route(authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
-    pass
+@router.put('/{lead_id}', response_model=LeadResponse, status_code=200)
+async def update_lead_route(lead_id: int, lead_update: LeadUpdate, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> LeadResponse:
+    lead: Lead = await update_lead(db, authenticated_user.id, lead_id, lead_update)
+    return LeadResponse.model_validate(lead)
+
 
 
 # Delete Lead
-@router.delete('/{zpid}', response_model=LeadResponse, status_code=200)
-async def delete_lead_route(authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> Response:
-    pass
+@router.delete('/{lead_id}', response_model=LeadResponse, status_code=200)
+async def delete_lead_route(lead_id: int, authenticated_user: User = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> Response:
+    return await delete_lead(db, authenticated_user.id, lead_id)

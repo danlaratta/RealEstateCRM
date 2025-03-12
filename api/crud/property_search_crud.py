@@ -34,7 +34,7 @@ async def create_search(db: AsyncSession, user_id: int, search_create: SearchCre
 
 
 # Get Search
-async def get_search(db: AsyncSession, user_id: int, search_id) -> PropertySearch:
+async def get_search(db: AsyncSession, user_id: int, search_id: int) -> PropertySearch:
     # Query for a Search
     result = await db.execute(select(PropertySearch).filter(PropertySearch.id == search_id, PropertySearch.user_id == user_id))
     search: Optional[PropertySearch] = result.scalar_one_or_none()

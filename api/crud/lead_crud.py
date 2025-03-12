@@ -2,13 +2,14 @@ from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from api.schemas.lead_schema import LeadCreate
+from api.schemas.lead_schema import LeadCreate, LeadUpdate
 from api.schemas.propery_search_schema import SearchBase
 from api.models import Lead, User, Listing, PropertySearch
 from api.crud.user_crud import get_user
 from api.crud.listing_crud import get_listing
 from api.crud.property_search_crud import get_search
 from api.router.exceptions.exceptions import database_exception
+from typing import Optional
 
 
 # Create Lead - Manual/Unsaved Search
@@ -80,16 +81,43 @@ async def get_all_leads(db: AsyncSession, user_id: int) -> list[Lead]:
 
 
 # Get Lead
-async def get_lead() -> Lead:
-    pass
+async def get_lead(db: AsyncSession, user_id: int, lead_id: int) -> Lead:
+    result = await db.execute(select(Lead).filter(Lead.id == lead_id, Lead.user_id == user_id))
+    lead: Optional[Lead] = result.scalar_one_or_none()
+    return lead
 
 
 # Update Lead
-async def update_lead() -> Lead:
-    pass
+async def update_lead(db: AsyncSession, user_id: int, lead_id: int, lead_update: LeadUpdate) -> Lead:
+    # Get Lead to update
+    lead: Lead = await get_lead(db, user_id, lead_id)
+
+    try:
+        for key, value in lead_update.model_dump(exclude_unset=True).items():
+            setattr(lead, key, value)
+
+        await db.commit()
+        await db.refresh(lead)
+        return lead
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Duplicate entry detected')
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
 
 
 # Delete Lead
-async def delete_lead() -> Response:
-    pass
+async def delete_lead(db: AsyncSession, user_id: int, lead_id: int) -> Response:
+    # Get Lead to delete
+    lead: Lead = await get_lead(db, user_id, lead_id)
+
+    try:
+        await db.delete(lead)
+        await db.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise database_exception(e)
+
 
