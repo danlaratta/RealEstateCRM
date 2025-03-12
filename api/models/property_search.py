@@ -13,8 +13,6 @@ class PropertySearch(Base):
 
     # define table attributes/columns
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    # city: Mapped[str] = mapped_column(String(50), nullable=False)
-    # state: Mapped[str] = mapped_column(String(50), nullable=False)
     location: Mapped[str] = mapped_column(String(255), nullable=False)
     status_type: Mapped[str] = mapped_column(String(50), nullable=False, default='ForSale')
     home_type: Mapped[str] = mapped_column(String(50), nullable=False, default='Houses')

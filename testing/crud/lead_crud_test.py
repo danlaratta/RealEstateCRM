@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from unittest.mock import AsyncMock, patch
-from api.crud.lead_crud import create_lead_custom_search
+from api.crud.lead_crud import create_lead_manual_search
 from api.schemas.lead_schema import LeadCreate
 from api.models import User, PropertySearch, Listing, Lead
 
@@ -16,8 +16,6 @@ async def test_create_lead_saved_search(mocker):
     listing_mock: Listing = Listing(zpid= 35453710, address= '2089 13th St SW, Akron, OH 44314', status_type= 'FOR_SALE', home_type= 'SINGLE_FAMILY', price= 110000, bedrooms= 3, bathrooms= 2, square_ft= 920, days_on_market= 2)
 
     # Mock DB Get Functions
-    # mocker.patch('api.crud.user_crud.get_user', return_value=AsyncMock(user_mock))
-    # mocker.patch('api.crud.property_search_crud.get_search', return_value=AsyncMock(return_value=search_mock))
     mocker.patch('api.crud.user_crud.get_user', return_value=user_mock)
     mocker.patch('api.crud.property_search_crud.get_search', return_value=search_mock)
 
@@ -58,7 +56,7 @@ async def test_create_lead_saved_search(mocker):
     lead_create_mock: LeadCreate = LeadCreate.model_validate(lead_create)
 
     # Call Create Crud Func
-    lead_mock: Lead = await create_lead_custom_search(mock_db, user_mock.id,zpid, search_params, lead_create_mock)
+    lead_mock: Lead = await create_lead_manual_search(mock_db, user_mock.id,zpid, search_params, lead_create_mock)
 
     print(f'Lead Mock zpid: {lead_mock.zpid}')
     print(f'Listing Mock zpid: {listing_mock.zpid}')

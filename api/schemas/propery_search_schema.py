@@ -17,6 +17,9 @@ class SearchBase(BaseModel):
     square_ft_min: int = Field(default=500, alias='sqftMin')
     square_ft_max: int = Field(default=1500, alias='sqftMax')
 
+    class Config:
+        from_attributes = True
+
     # Creates location property (required for external api search paramter)
     # @computed_field
     # @property
