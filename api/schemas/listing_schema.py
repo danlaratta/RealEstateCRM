@@ -28,7 +28,6 @@ class ListingResponse(ListingBase):
     bathrooms: int
     square_ft: Optional[int] = Field(default=0, alias='livingArea')
     days_on_market: int = Field(default=0, alias='daysOnZillow')
-    # agent_id: int
 
     class Config:
         from_attributes = True
