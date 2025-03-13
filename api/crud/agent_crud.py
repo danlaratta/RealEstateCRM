@@ -32,7 +32,7 @@ async def create_agent(db: AsyncSession, user_id: int, agent: AgentCreate) -> Ag
 # Get a single agent by ID
 async def get_agent(db: AsyncSession, user_id: int, agent_id: int) -> Agent:
         # Query for specific agent
-        result = await db.execute(select(Agent).filter(Agent.id == agent_id, Agent.user_id == user_id))
+        result = await db.execute(select(Agent).where(Agent.id == agent_id, Agent.user_id == user_id))
         agent: Optional[Agent] = result.scalar_one_or_none()
 
         if agent is None:
@@ -44,7 +44,7 @@ async def get_agent(db: AsyncSession, user_id: int, agent_id: int) -> Agent:
 # Get all agents
 async def get_all_agents(db: AsyncSession, user_id: int) -> list[Agent]:
     # Query for all agents
-    result = await db.execute(select(Agent).filter(Agent.user_id == user_id))
+    result = await db.execute(select(Agent).where(Agent.user_id == user_id))
     agents: Optional[list[Agent]] = list[Agent](result.scalars().all())
 
     if agents is None:

@@ -29,7 +29,7 @@ async def create_category(db: AsyncSession, user_id: int, category_create: Categ
 # Get Single Category
 async def get_category(db: AsyncSession, user_id: int, category_id: int) -> SearchCategory:
     # Query for specific category
-    result = await db.execute(select(SearchCategory).filter(SearchCategory.id == category_id, SearchCategory.user_id == user_id))
+    result = await db.execute(select(SearchCategory).where(SearchCategory.id == category_id, SearchCategory.user_id == user_id))
     category: Optional[SearchCategory] = result.scalar_one_or_none()
 
     if category is None:
@@ -41,7 +41,7 @@ async def get_category(db: AsyncSession, user_id: int, category_id: int) -> Sear
 # Get All Categories
 async def get_all_categories(db: AsyncSession, user_id: int) -> list[SearchCategory]:
     # Query for all categories
-    result = await db.execute(select(SearchCategory).filter(SearchCategory.user_id == user_id))
+    result = await db.execute(select(SearchCategory).where(SearchCategory.user_id == user_id))
     categories: list[SearchCategory] = list[SearchCategory](result.scalars().all())
 
     if categories is None:
