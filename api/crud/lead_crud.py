@@ -2,6 +2,7 @@ from fastapi import HTTPException, status, Response
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from api.schemas.lead_schema import LeadCreate, LeadUpdate
 from api.schemas.propery_search_schema import SearchBase
 from api.models import Lead, User, Listing, PropertySearch
@@ -83,6 +84,21 @@ async def get_all_leads(db: AsyncSession, user_id: int) -> list[Lead]:
 # Get Lead
 async def get_lead(db: AsyncSession, user_id: int, lead_id: int) -> Lead:
     result = await db.execute(select(Lead).where(Lead.id == lead_id, Lead.user_id == user_id))
+    lead: Optional[Lead] = result.scalar_one_or_none()
+    return lead
+
+
+# Get all listings from leads
+async def get_all_listings_from_leads(db: AsyncSession, user_id: int) -> list[Lead]:
+    # eager join (preloads related data in a single query) the listing relationship using (all the listings asscociated with leads)
+    result = await db.execute(select(Lead).options(joinedload(Lead.listing)).where(Lead.user_id == user_id))
+    listings: list[Lead] = list[Lead](result.scalars().unique().all())
+    return listings
+
+
+# Get a listing from a lead
+async def get_listing_from_lead(db: AsyncSession, user_id: int,  lead_id: int) -> Lead:
+    result = await db.execute(select(Lead).options(joinedload(Lead.listing)).where(Lead.user_id == user_id, Lead.id == lead_id))
     lead: Optional[Lead] = result.scalar_one_or_none()
     return lead
 

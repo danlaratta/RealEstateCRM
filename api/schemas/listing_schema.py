@@ -13,6 +13,9 @@ class ListingBase(BaseModel):
     square_ft: Optional[int] = Field(default=0, alias='livingArea')
     days_on_market: int = Field(default=0, alias='daysOnZillow')
 
+    class Config:
+        from_attributes = True
+
 
 class ListingCreate(ListingBase):
     pass

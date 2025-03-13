@@ -20,8 +20,8 @@ class Lead(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False) # FK links to users table
     zpid: Mapped[int] = mapped_column(Integer, ForeignKey('listings.zpid', ondelete='CASCADE'), nullable=False) # FK links to listing table
 
-    # Relationship
-    listing: Mapped['Listing'] = relationship('Listing', back_populates='lead', uselist=False, cascade='all, delete')
+    # Relationship (lazy='joined' Ensures it eagerly loads within session context)
+    listing: Mapped['Listing'] = relationship('Listing', back_populates='lead', uselist=False, cascade='all, delete', lazy='joined')
 
     #  Ensures each listing_id in the Lead table is unique, meaning a listing can have at most one associated lead (one-to-one relationship)
     __table_args__ = (UniqueConstraint('zpid', name='unique_lead_listing'),)
