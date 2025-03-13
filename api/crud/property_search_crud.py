@@ -36,7 +36,7 @@ async def create_search(db: AsyncSession, user_id: int, search_create: SearchCre
 # Get Search
 async def get_search(db: AsyncSession, user_id: int, search_id: int) -> PropertySearch:
     # Query for a Search
-    result = await db.execute(select(PropertySearch).filter(PropertySearch.id == search_id, PropertySearch.user_id == user_id))
+    result = await db.execute(select(PropertySearch).where(PropertySearch.id == search_id, PropertySearch.user_id == user_id))
     search: Optional[PropertySearch] = result.scalar_one_or_none()
 
     if search is None:
@@ -48,7 +48,7 @@ async def get_search(db: AsyncSession, user_id: int, search_id: int) -> Property
 # Get All Searches
 async def get_all_searches(db: AsyncSession, user_id: int) -> list[PropertySearch]:
     # Query for all Searches
-    result = await db.execute(select(PropertySearch).filter(PropertySearch.user_id == user_id))
+    result = await db.execute(select(PropertySearch).where(PropertySearch.user_id == user_id))
     searches: list[PropertySearch] = list[PropertySearch](result.scalars().all())
 
     if searches is None:

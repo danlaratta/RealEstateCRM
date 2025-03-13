@@ -6,7 +6,7 @@ from api.schemas.lead_schema import LeadCreate, LeadUpdate
 from api.schemas.propery_search_schema import SearchBase
 from api.models import Lead, User, Listing, PropertySearch
 from api.crud.user_crud import get_user
-from api.crud.listing_crud import get_listing
+from api.crud.listing_crud import get_listing_external_api
 from api.crud.property_search_crud import get_search
 from api.router.exceptions.exceptions import database_exception
 from typing import Optional
@@ -18,7 +18,7 @@ async def create_lead_manual_search(db: AsyncSession, user_id: int, zpid: int, s
     user: User = await get_user(db, user_id)
 
     # Get listings
-    listing: Listing = await get_listing(zpid, search_params)
+    listing: Listing = await get_listing_external_api(zpid, search_params)
 
     if listing is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Listing with zpid: {zpid} does not exist')
@@ -48,7 +48,7 @@ async def create_lead_saved_search(db: AsyncSession, user_id: int, zpid: int, se
         search_params: SearchBase = SearchBase.model_validate(search)
 
         # Get listings
-        listing: Listing = await get_listing(zpid, search_params)
+        listing: Listing = await get_listing_external_api(zpid, search_params)
 
         if listing is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -71,7 +71,7 @@ async def create_lead_saved_search(db: AsyncSession, user_id: int, zpid: int, se
 
 # Get All Leads
 async def get_all_leads(db: AsyncSession, user_id: int) -> list[Lead]:
-    result = await db.execute(select(Lead).filter(Lead.user_id == user_id))
+    result = await db.execute(select(Lead).where(Lead.user_id == user_id))
     leads: list[Lead] = list[Lead](result.scalars().all())
 
     if leads is None or not leads:
@@ -82,7 +82,7 @@ async def get_all_leads(db: AsyncSession, user_id: int) -> list[Lead]:
 
 # Get Lead
 async def get_lead(db: AsyncSession, user_id: int, lead_id: int) -> Lead:
-    result = await db.execute(select(Lead).filter(Lead.id == lead_id, Lead.user_id == user_id))
+    result = await db.execute(select(Lead).where(Lead.id == lead_id, Lead.user_id == user_id))
     lead: Optional[Lead] = result.scalar_one_or_none()
     return lead
 
